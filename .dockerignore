@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+ISSUE.md
+MIGRATION.md
+
+# Node modules
+frontend/node_modules
+frontend/dist
+frontend/.vite
+
+# Python
+backend/__pycache__
+backend/*.pyc
+backend/.pytest_cache
+backend/.venv
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+build/
+dist/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Scripts (included separately)
+start_*.sh
