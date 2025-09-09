@@ -4,92 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello World - Vue 3 + FastAPI</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.esm-browser.js" type="module"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>{{ title }}</h1>
-            <p class="subtitle">{{ subtitle }}</p>
-        </header>
-
-        <main>
-            <!-- Basic Hello World Section -->
-            <section class="card">
-                <h2>Basic Hello World</h2>
-                <p>{{ localMessage }}</p>
-                <button @click="updateLocalMessage" class="btn btn-primary">
-                    Change Message
-                </button>
-            </section>
-
-            <!-- API Integration Section -->
-            <section class="card">
-                <h2>FastAPI Integration</h2>
-                <div class="input-group">
-                    <input 
-                        v-model="userName" 
-                        type="text" 
-                        placeholder="Enter your name (optional)"
-                        class="input"
-                    >
-                    <button @click="fetchFromAPI" class="btn btn-secondary" :disabled="loading">
-                        {{ loading ? 'Loading...' : 'Get Message from API' }}
-                    </button>
-                </div>
-                
-                <div v-if="apiResponse" class="api-response">
-                    <h3>API Response:</h3>
-                    <div class="response-content">
-                        <p><strong>Message:</strong> {{ apiResponse.message }}</p>
-                        <p><strong>Timestamp:</strong> {{ formatTimestamp(apiResponse.timestamp) }}</p>
-                        <p><strong>Backend:</strong> {{ apiResponse.backend }}</p>
-                        <p><strong>Frontend:</strong> {{ apiResponse.frontend }}</p>
-                    </div>
-                </div>
-
-                <div v-if="error" class="error">
-                    <p><strong>Error:</strong> {{ error }}</p>
-                </div>
-            </section>
-
-            <!-- Counter Demo Section -->
-            <section class="card">
-                <h2>Interactive Counter</h2>
-                <div class="counter">
-                    <button @click="decrementCounter" class="btn btn-outline">-</button>
-                    <span class="counter-value">{{ counter }}</span>
-                    <button @click="incrementCounter" class="btn btn-outline">+</button>
-                </div>
-                <button @click="resetCounter" class="btn btn-small">Reset</button>
-            </section>
-
-            <!-- Status Section -->
-            <section class="card">
-                <h2>System Status</h2>
-                <div class="status-grid">
-                    <div class="status-item">
-                        <span class="status-label">Frontend:</span>
-                        <span class="status-value online">Vue 3.js ✓</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Backend:</span>
-                        <span class="status-value" :class="backendStatus">
-                            FastAPI {{ backendStatus === 'online' ? '✓' : '✗' }}
-                        </span>
-                    </div>
-                </div>
-                <button @click="checkBackendHealth" class="btn btn-small">Check Backend</button>
-            </section>
-        </main>
-
-        <footer>
-            <p>Built with Vue 3.js + FastAPI | Demo Application</p>
-        </footer>
-    </div>
-
-    <script src="app.js"></script>
+    <div id="app"></div>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
