@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 
-A complete full-stack web application demonstrating modern web development practices using **Vue 3.js** frontend and **FastAPI** backend, with comprehensive Docker deployment capabilities.
+A complete full-stack web application demonstrating modern web development practices using **Vue 3.js** frontend and **FastAPI** backend.
 
 ## 🏗️ Architecture
 
@@ -22,30 +22,23 @@ hello-world-webapp/
 │   ├── README.md           # Main project documentation
 │   ├── ISSUE.md           # Issues and solutions encountered
 │   ├── MIGRATION.md       # Vue SFC migration guide
-│   ├── DEPLOYMENT.md      # Docker deployment guide
 │   └── PROJECT_SUMMARY.md # This summary file
 │
 ├── 🔧 Backend (FastAPI)
 │   ├── main.py            # FastAPI application with REST endpoints
 │   ├── requirements.txt   # Python dependencies
-│   └── Dockerfile         # Backend-specific Docker config
 │
 ├── 🎨 Frontend (Vue 3.js SFC)
 │   ├── App.vue            # Main Vue Single File Component
 │   ├── main.js            # Vue application bootstrap
 │   ├── index.html         # HTML entry point
 │   ├── package.json       # Node.js dependencies
-│   ├── vite.config.js     # Vite build configuration
-│   ├── app.js.backup      # Original Options API backup
-│   └── style.css.backup   # Original styles backup
+│   └── vite.config.js     # Vite build configuration
+│
 │
 ├── 🐳 Docker Configuration
 │   ├── Dockerfile         # Multi-stage production build
-│   ├── docker-compose.yml # Container orchestration
-│   ├── .dockerignore      # Docker build context exclusions
-│   ├── docker-build.sh    # Build automation script
-│   ├── docker-run.sh      # Run automation script
-│   └── docker-test.sh     # Environment validation script
+│   └── .dockerignore      # Docker build context exclusions
 │
 └── 🚀 Development Scripts
     ├── start_backend.sh    # Backend development server
@@ -73,13 +66,11 @@ hello-world-webapp/
 - ✅ **Responsive design** with modern CSS
 - ✅ **Interactive components** (counter, forms, status indicators)
 
-### DevOps & Deployment
-- ✅ **Multi-stage Docker build** for optimized images
-- ✅ **Docker Compose** orchestration
-- ✅ **Health checks** and monitoring
-- ✅ **Automated build/run scripts**
-- ✅ **Production-ready configuration**
-- ✅ **Environment validation**
+### Development & Deployment
+- ✅ **Development scripts** for easy local setup
+- ✅ **Virtual environment** support
+- ✅ **Cross-platform compatibility**
+- ✅ **Hot reload** development experience
 
 ## 🛠️ Technology Stack
 
@@ -90,12 +81,10 @@ hello-world-webapp/
 | **HTTP Client** | Axios | ^1.6.0 | API communication |
 | **Backend** | FastAPI | 0.104.1 | Python web framework |
 | **ASGI Server** | Uvicorn | 0.24.0 | Production ASGI server |
-| **Containerization** | Docker | Latest | Application packaging |
-| **Orchestration** | Docker Compose | 3.8 | Multi-container management |
 
 ## 🚀 Deployment Options
 
-### 1. Development Mode
+### Development Mode
 ```bash
 # Terminal 1: Start backend
 ./start_backend.sh
@@ -104,21 +93,11 @@ hello-world-webapp/
 ./start_frontend.sh
 ```
 
-### 2. Docker Single Container
-```bash
-# Build and run
-./docker-build.sh
-./docker-run.sh
-```
-
-### 3. Docker Compose
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-```
+### Production Mode
+For production deployment, you can:
+- Use a reverse proxy (Nginx) to serve the built frontend
+- Deploy FastAPI with a production ASGI server (Uvicorn/Gunicorn)
+- Set up environment-specific configurations
 
 ## 📊 API Endpoints
 
@@ -136,7 +115,7 @@ docker-compose logs -f
 1. **Virtual Environment pip Missing** - Resolved by installing pip with `ensurepip`
 2. **Startup Script Compatibility** - Updated to handle different environments
 3. **Vue Architecture Migration** - Successfully migrated to SFC with Composition API
-4. **Docker Build Optimization** - Implemented multi-stage builds
+4. **Build Optimization** - Implemented efficient development workflow
 
 ### Solutions Implemented:
 - ✅ Robust virtual environment detection
@@ -157,24 +136,19 @@ docker-compose logs -f
 - **FastAPI**: High-performance Python framework
 - **Health Checks**: Proactive monitoring
 
-### Docker
-- **Multi-stage Builds**: Reduced image size
-- **Layer Caching**: Faster subsequent builds
-- **Alpine Base**: Minimal Linux distribution
 
 ## 🔐 Security Features
 
 - **CORS Configuration**: Controlled cross-origin access
 - **Input Validation**: Pydantic models for data validation
 - **Health Monitoring**: Automated health checks
-- **Container Isolation**: Sandboxed execution environment
+- **Environment Isolation**: Virtual environment for Python dependencies
 
 ## 📚 Documentation Quality
 
 - **README.md**: Comprehensive setup and usage guide
 - **ISSUE.md**: Detailed problem-solving documentation
 - **MIGRATION.md**: Vue SFC migration walkthrough
-- **DEPLOYMENT.md**: Complete Docker deployment guide
 - **Inline Comments**: Well-documented code throughout
 
 ## 🎯 Learning Outcomes
@@ -182,7 +156,7 @@ docker-compose logs -f
 This project demonstrates:
 1. **Modern Frontend Development** with Vue 3 Composition API
 2. **Backend API Development** with FastAPI
-3. **Containerization** with Docker best practices
+3. **Development Workflow** with modern tooling
 4. **DevOps Automation** with shell scripts
 5. **Problem Solving** and documentation
 6. **Full-Stack Integration** between frontend and backend
@@ -196,8 +170,8 @@ Potential improvements for production use:
 - **Routing** (Vue Router)
 - **Testing** (Jest, Pytest)
 - **CI/CD Pipeline** (GitHub Actions, GitLab CI)
-- **Monitoring** (Prometheus, Grafana)
-- **Load Balancing** (Nginx, Traefik)
+- **Monitoring** (Application monitoring, logging)
+- **Load Balancing** (Nginx reverse proxy)
 
 ## 📞 Quick Reference
 
@@ -211,22 +185,46 @@ Potential improvements for production use:
 # Development
 ./start_backend.sh && ./start_frontend.sh
 
-# Docker
-./docker-build.sh && ./docker-run.sh
-
-# Docker Compose
-docker-compose up -d
-
 # Health Check
 curl http://localhost:8000/health
 
-# Docker Container Management
-docker stop <container_name_or_id>    # Stop a container
-docker rm <container_name_or_id>      # Remove a container
-docker rmi <image_name_or_id>         # Delete an image
-docker rmi -f <image_name_or_id>      # Force delete image
+# Frontend Build (for production)
+cd frontend && npm run build
+
+# Docker Deployment
+docker build -t hello-world-app .
+docker run --name hello-world-container -p 3000:3000 -p 8000:8000 hello-world-app
+
+# Container Management
+docker start hello-world-container    # Start existing container
+docker stop hello-world-container     # Stop container
+docker restart hello-world-container  # Restart container
+docker logs hello-world-container     # View container logs
+
+# Container & Image Deletion
+docker stop hello-world-container     # Stop container first
+docker rm hello-world-container       # Remove container
+docker rmi hello-world-app            # Remove image
+docker rmi -f hello-world-app          # Force remove image (if in use)
+
+# View Docker Resources
+docker ps                             # List running containers
 docker ps -a                          # List all containers
 docker images                         # List all images
+docker images hello-world-app         # List specific image
+
+# Cleanup Commands
+docker container prune                 # Remove all stopped containers
+docker image prune                     # Remove unused images
+docker image prune -a                  # Remove all unused images
+docker system prune                    # Remove unused containers, networks, images
+docker system prune -a                # Remove all unused resources (aggressive cleanup)
+docker volume prune                    # Remove unused volumes
+
+# Remove All Docker Resources (Nuclear Option)
+docker stop $(docker ps -q)           # Stop all running containers
+docker rm $(docker ps -aq)            # Remove all containers
+docker rmi $(docker images -q)        # Remove all images
 ```
 
 ---

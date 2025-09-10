@@ -98,7 +98,7 @@ export default {
     const loading = ref(false)
     const counter = ref(0)
     const backendStatus = ref('unknown')
-    const apiBaseUrl = ref('http://localhost:8000')
+    const apiBaseUrl = ref('')
 
     // Methods
     const updateLocalMessage = () => {

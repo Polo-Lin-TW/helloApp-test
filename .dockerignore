@@ -1,55 +1,38 @@
-# Git
-.git
+# Dependencies
+node_modules/
+frontend/node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Development files
+.git/
 .gitignore
+*.md
+.env
+.env.local
 
-# Documentation
-README.md
-ISSUE.md
-MIGRATION.md
-
-# Node modules
-frontend/node_modules
-frontend/dist
-frontend/.vite
-
-# Python
-backend/__pycache__
-backend/*.pyc
-backend/.pytest_cache
-backend/.venv
-
-# Virtual environments
-.venv
-venv/
-env/
-
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
-logs/
+npm-debug.log*
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# Build artifacts (will be built in Docker)
+frontend/dist/
+*.egg-info/
 
-# Build artifacts
-build/
-dist/
+# Test files
+*test*
+*spec*
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
-
-# Scripts (included separately)
-start_*.sh
+# Backup files
+*.backup

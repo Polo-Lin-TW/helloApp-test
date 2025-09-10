@@ -9,8 +9,7 @@ A simple demonstration of a web application using:
 ```
 ├── backend/          # FastAPI backend
 │   ├── main.py      # FastAPI application
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── requirements.txt
 ├── frontend/        # Vue 3.js frontend (SFC)
 │   ├── index.html   # Main HTML file
 │   ├── App.vue      # Main Vue component (SFC)
@@ -21,8 +20,9 @@ A simple demonstration of a web application using:
 │   └── style.css.backup # Original styles (backup)
 ├── start_backend.sh  # Backend launcher script
 ├── start_frontend.sh # Frontend launcher script
-├── docker-compose.yml # Container setup
 ├── ISSUE.md         # Issues and solutions
+├── MIGRATION.md     # Vue SFC migration guide
+├── PROJECT_SUMMARY.md # Project overview
 └── README.md        # This file
 ```
 

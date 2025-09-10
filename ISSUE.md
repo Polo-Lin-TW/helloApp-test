@@ -196,3 +196,153 @@ which python3
 
 ## Status
 ✅ **RESOLVED** - All issues have been successfully resolved and the application is now working correctly.
+
+---
+
+## Issue #2: Frontend-Backend Connection Issues in Docker Environment
+
+### Problem Description
+After containerizing the HelloApp project with Docker, the frontend (Vue.js) was unable to connect to the backend (FastAPI), resulting in network connection errors.
+
+### Error Messages
+```
+index-Caiiv4iA.js:22 API Error: j {message: 'Network Error', name: 'AxiosError', code: 'ERR_NETWORK', ...}
+GET http://localhost:8000/api/message?name=polo net::ERR_CONNECTION_REFUSED
+```
+
+### Root Causes
+
+#### 1. Hardcoded API Base URL
+**Problem**: Frontend Vue.js application had hardcoded API base URL pointing directly to backend container
+```javascript
+// frontend/App.vue:101
+const apiBaseUrl = ref('http://localhost:8000')
+```
+
+**Impact**: Frontend was trying to connect directly to `localhost:8000` instead of using Nginx reverse proxy
+
+#### 2. Docker Network Configuration Issues
+**Problem**: Containers were not properly connected to the same Docker network
+- Frontend container couldn't resolve `backend` hostname
+- Network service discovery was failing
+
+#### 3. Nginx Proxy Configuration Errors
+**Problem**: Multiple configuration issues in `nginx.conf`:
+- Wrong upstream server name (`backend` vs `helloapp-backend`)
+- Incorrect proxy path configuration
+- Missing proper path forwarding
+
+### Solutions Applied
+
+#### 1. Fix Frontend API Base URL
+**Solution**: Changed hardcoded URL to use relative paths through Nginx proxy
+```javascript
+// Before
+const apiBaseUrl = ref('http://localhost:8000')
+
+// After  
+const apiBaseUrl = ref('')
+```
+
+#### 2. Fix Docker Network Configuration
+**Solution**: Ensured all containers are on the same network
+```bash
+# Create dedicated network
+docker network create helloapp-network
+
+# Start containers on same network
+docker run -d --name helloapp-backend --network helloapp-network -p 8000:8000 helloapp-backend
+docker run -d --name helloapp-frontend --network helloapp-network -p 80:80 helloapp-frontend
+```
+
+#### 3. Fix Nginx Proxy Configuration
+**Solution**: Updated `frontend/nginx.conf` with correct upstream server names and paths
+
+**Before (Incorrect):**
+```nginx
+location /api/ {
+    proxy_pass http://backend:8000/;
+}
+
+location /docs {
+    proxy_pass http://backend:8000/docs;
+}
+
+location /health {
+    proxy_pass http://backend:8000/health;
+}
+```
+
+**After (Correct):**
+```nginx
+location /api/ {
+    proxy_pass http://helloapp-backend:8000/api/;
+}
+
+location /docs {
+    proxy_pass http://helloapp-backend:8000/docs;
+}
+
+location /health {
+    proxy_pass http://helloapp-backend:8000/health;
+}
+```
+
+### Key Configuration Changes
+
+#### Frontend Changes
+1. **App.vue**: Updated API base URL to use relative paths
+2. **nginx.conf**: Fixed upstream server names and proxy paths
+3. **Docker network**: Connected to `helloapp-network`
+
+#### Backend Changes
+No changes required - backend was working correctly
+
+#### Network Architecture
+```
+Browser Request → Nginx (Port 80) → FastAPI Backend (Port 8000)
+     ↓                ↓                      ↓
+localhost:80    helloapp-frontend    helloapp-backend
+                (Docker Network)     (Docker Network)
+```
+
+### Verification Steps
+
+After applying fixes, all endpoints work correctly:
+
+1. **Frontend**: http://localhost/ ✅
+2. **API Calls**: http://localhost/api/message ✅
+3. **Health Check**: http://localhost/health ✅
+4. **API Documentation**: http://localhost/docs ✅
+
+### Final Container Status
+```
+NAMES               PORTS                                       STATUS
+helloapp-frontend   0.0.0.0:80->80/tcp, :::80->80/tcp           Up (healthy)
+helloapp-backend    0.0.0.0:8000->8000/tcp, :::8000->8000/tcp   Up (healthy)
+```
+
+### Lessons Learned
+
+1. **Container Networking**: Always ensure containers that need to communicate are on the same Docker network
+2. **Service Discovery**: Use container names (not localhost) for inter-container communication
+3. **Proxy Configuration**: Verify upstream server names match actual container names
+4. **Path Handling**: Ensure proxy paths preserve the correct API endpoint structure
+5. **Relative URLs**: Use relative URLs in frontend to leverage reverse proxy instead of hardcoding backend URLs
+
+### Prevention for Future Projects
+
+1. Use environment variables for API base URLs
+2. Set up Docker Compose for easier multi-container management
+3. Test container networking early in development
+4. Document container naming conventions
+5. Validate proxy configurations before deployment
+
+### Related Files Modified
+- `frontend/App.vue` - Updated API base URL configuration
+- `frontend/nginx.conf` - Fixed upstream server names and proxy paths
+- `frontend/Dockerfile` - Multi-stage build configuration
+- `backend/Dockerfile` - Backend containerization
+
+### Status
+✅ **RESOLVED** - Frontend and backend communication is now working correctly through Docker containers with Nginx reverse proxy.
