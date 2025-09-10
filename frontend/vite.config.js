@@ -11,6 +11,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    minify: true
+  },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production')
   }
 })
