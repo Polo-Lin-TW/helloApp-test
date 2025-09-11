@@ -29,7 +29,7 @@ RUN apk add --no-cache \
     bash
 
 # Copy requirements file first for better caching
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -59,7 +59,7 @@ RUN echo '#!/bin/bash' > start.sh && \
     echo 'echo "Nginx started on port 80"' >> start.sh && \
     echo '# Start backend server' >> start.sh && \
     echo 'echo "Starting backend server on port 8000"' >> start.sh && \
-    echo 'uvicorn backend.main:app --host 127.0.0.1 --port 8000' >> start.sh && \
+    echo 'cd /app/backend && uvicorn main:app --host 127.0.0.1 --port 8000' >> start.sh && \
     chmod +x start.sh
 
 # Expose port 80 for Nginx (frontend + API proxy)

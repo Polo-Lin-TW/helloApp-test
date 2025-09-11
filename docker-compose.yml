@@ -1,55 +1,82 @@
 version: '3.8'
 
 services:
-  # MySQL Database
+  # MySQL Database - using environment variables following Rainbond pattern
   mysql:
-    image: mysql:8.0
+    build:
+      context: ./db
+      dockerfile: Dockerfile
     container_name: helloapp_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: helloapp
-      MYSQL_USER: hellouser
-      MYSQL_PASSWORD: hellopassword
+      # Rainbond-style environment variables with defaults
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-helloapp}
+      - MYSQL_USER=${MYSQL_USER:-hellouser}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-hellopassword}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - helloapp_network
+      - helloapp-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
 
-  # Backend Service
+  # Backend Service - using dedicated backend Dockerfile
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: helloapp_backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DB_HOST=helloapp_mysql
-      - DB_PORT=3306
-      - DB_USER=hellouser
-      - DB_PASSWORD=hellopassword
-      - DB_NAME=helloapp
+      # Rainbond-style environment variables for backend
+      - DB_HOST=${MYSQL_HOST:-helloapp_mysql}
+      - DB_PORT=${MYSQL_PORT:-3306}
+      - DB_USER=${MYSQL_USER:-hellouser}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-hellopassword}
+      - DB_NAME=${MYSQL_DATABASE:-helloapp}
     depends_on:
       mysql:
         condition: service_healthy
     networks:
-      - helloapp_network
+      - helloapp-network
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Main Application (Frontend + Backend + Nginx)
+  # Frontend Service - using dedicated frontend Dockerfile with Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: helloapp_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Backend connection variables for frontend
+      - BACKEND_HOST=${BACKEND_HOST:-helloapp_backend}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+    depends_on:
+      - backend
+    networks:
+      - helloapp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main Application (All-in-one with Frontend + Backend + Nginx)
   app:
     build:
       context: .
@@ -59,16 +86,17 @@ services:
     ports:
       - "80:80"
     environment:
-      - DB_HOST=helloapp_mysql
-      - DB_PORT=3306
-      - DB_USER=hellouser
-      - DB_PASSWORD=hellopassword
-      - DB_NAME=helloapp
+      # Database connection variables for integrated app
+      - DB_HOST=${MYSQL_HOST:-helloapp_mysql}
+      - DB_PORT=${MYSQL_PORT:-3306}
+      - DB_USER=${MYSQL_USER:-hellouser}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-hellopassword}
+      - DB_NAME=${MYSQL_DATABASE:-helloapp}
     depends_on:
       mysql:
         condition: service_healthy
     networks:
-      - helloapp_network
+      - helloapp-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -79,5 +107,5 @@ volumes:
   mysql_data:
 
 networks:
-  helloapp_network:
+  helloapp-network:
     driver: bridge
