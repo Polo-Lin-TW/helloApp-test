@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   server: {
     port: 3000,
@@ -12,9 +11,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    minify: true
-  },
-  define: {
-    'process.env.NODE_ENV': JSON.stringify('production')
+    minify: mode === 'production',
+    sourcemap: mode === 'development',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue'],
+          // 如果使用其他套件，可以分離
+          // utils: ['lodash', 'axios']
+        }
+      }
+    }
   }
-})
+}))

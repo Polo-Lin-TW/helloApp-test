@@ -1,0 +1,7 @@
+{
+    "claudeCodeChat.permissions.yoloMode": false,
+    "claudeCodeChat.wsl.enabled": true,
+    "claudeCodeChat.wsl.distro": "Ubuntu",
+    "claudeCodeChat.wsl.nodePath": "/home/linuxbrew/.linuxbrew/bin/node",
+    "claudeCodeChat.wsl.claudePath": "/home/linuxbrew/.linuxbrew/bin/claude",
+}
