@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: helloapp_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: helloapp
+      MYSQL_USER: hellouser
+      MYSQL_PASSWORD: hellopassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - helloapp_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: helloapp_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=helloapp_mysql
+      - DB_PORT=3306
+      - DB_USER=hellouser
+      - DB_PASSWORD=hellopassword
+      - DB_NAME=helloapp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - helloapp_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main Application (Frontend + Backend + Nginx)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helloapp_main
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - DB_HOST=helloapp_mysql
+      - DB_PORT=3306
+      - DB_USER=hellouser
+      - DB_PASSWORD=hellopassword
+      - DB_NAME=helloapp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - helloapp_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql_data:
+
+networks:
+  helloapp_network:
+    driver: bridge
