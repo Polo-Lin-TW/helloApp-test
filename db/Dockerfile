@@ -3,10 +3,10 @@ FROM mysql:8.0
 
 # Set environment variables for MySQL - following Rainbond deployment pattern
 # These can be overridden at runtime
-ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
-ENV MYSQL_DATABASE=${MYSQL_DATABASE:-helloapp}
-ENV MYSQL_USER=${MYSQL_USER:-hellouser}
-ENV MYSQL_PASSWORD=${MYSQL_PASSWORD:-hellopassword}
+ENV MYSQL_ROOT_PASSWORD=rootpassword
+ENV MYSQL_DATABASE=helloapp
+ENV MYSQL_USER=hellouser
+ENV MYSQL_PASSWORD=hellopassword
 
 # Copy initialization script
 COPY init.sql /docker-entrypoint-initdb.d/

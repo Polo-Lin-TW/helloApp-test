@@ -124,13 +124,42 @@ export default {
           ? `${apiBaseUrl.value}/api/message?name=${encodeURIComponent(userName.value)}`
           : `${apiBaseUrl.value}/api/message`
         
-        const response = await axios.get(url)
+        logInfo('Attempting to fetch data from backend API', {
+          url,
+          userName: userName.value || 'anonymous',
+          backendUrl: apiBaseUrl.value
+        })
+        
+        const response = await axios.get(url, {
+          timeout: 10000 // 10 second timeout
+        })
+        
         apiResponse.value = response.data
         backendStatus.value = 'online'
+        
+        logConnection('success', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          responseData: response.data
+        })
+        
       } catch (err) {
         error.value = `Failed to connect to backend: ${err.message}`
         backendStatus.value = 'offline'
-        console.error('API Error:', err)
+        
+        logConnection('failed', {
+          url: `${apiBaseUrl.value}/api/message`,
+          error: err.message,
+          code: err.code,
+          response: err.response ? {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          } : null
+        })
+        
+        logError('API request failed', err)
       } finally {
         loading.value = false
       }
@@ -138,15 +167,43 @@ export default {
 
     const checkBackendHealth = async () => {
       try {
-        const response = await axios.get(`${apiBaseUrl.value}/health`)
+        const healthUrl = `${apiBaseUrl.value}/health`
+        logInfo('Checking backend health', { healthUrl })
+        
+        const response = await axios.get(healthUrl, {
+          timeout: 5000 // 5 second timeout for health check
+        })
+        
         if (response.data.status === 'healthy') {
           backendStatus.value = 'online'
+          logConnection('success', {
+            type: 'health_check',
+            url: healthUrl,
+            status: response.status,
+            healthStatus: response.data.status,
+            responseData: response.data
+          })
         } else {
           backendStatus.value = 'offline'
+          logInfo('Backend health check returned unhealthy status', {
+            url: healthUrl,
+            responseData: response.data
+          })
         }
       } catch (err) {
         backendStatus.value = 'offline'
-        console.error('Health check failed:', err)
+        logConnection('failed', {
+          type: 'health_check',
+          url: `${apiBaseUrl.value}/health`,
+          error: err.message,
+          code: err.code,
+          response: err.response ? {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          } : null
+        })
+        logError('Health check failed', err)
       }
     }
 
@@ -166,12 +223,58 @@ export default {
       return new Date(timestamp).toLocaleString()
     }
 
+    // Logging utility functions
+    const logInfo = (message, data = {}) => {
+      const timestamp = new Date().toISOString()
+      console.log(`[FRONTEND ${timestamp}] INFO: ${message}`, data)
+    }
+
+    const logError = (message, error = {}) => {
+      const timestamp = new Date().toISOString()
+      console.error(`[FRONTEND ${timestamp}] ERROR: ${message}`, error)
+    }
+
+    const logConnection = (status, details = {}) => {
+      const timestamp = new Date().toISOString()
+      const statusMsg = status === 'success' ? 'SUCCESS' : 'FAILED'
+      console.log(`[FRONTEND ${timestamp}] BACKEND_CONNECTION_${statusMsg}:`, details)
+    }
+
+    // Enhanced backend configuration with logging
+    const initializeBackendConfig = () => {
+      // Try to determine backend URL from environment or use defaults
+      const backendHost = import.meta.env.VITE_BACKEND_HOST || 'helloapp_backend'
+      const backendPort = import.meta.env.VITE_BACKEND_PORT || '8000'
+      
+      // For development, use localhost if we're in dev mode
+      if (import.meta.env.DEV) {
+        apiBaseUrl.value = `http://localhost:${backendPort}`
+        logInfo('Development mode detected, using localhost for backend connection', {
+          backendUrl: apiBaseUrl.value
+        })
+      } else {
+        apiBaseUrl.value = `http://${backendHost}:${backendPort}`
+        logInfo('Production mode, using container names for backend connection', {
+          backendHost,
+          backendPort,
+          backendUrl: apiBaseUrl.value
+        })
+      }
+    }
+
     // Lifecycle hooks
     onMounted(() => {
+      logInfo('Frontend component mounted, initializing backend connection')
+      
+      // Initialize backend configuration
+      initializeBackendConfig()
+      
       // Check backend health on component mount
+      logInfo('Starting backend health check')
       checkBackendHealth()
       
       // Auto-fetch a welcome message
+      logInfo('Scheduling automatic API fetch in 1 second')
       setTimeout(() => {
         fetchFromAPI()
       }, 1000)
