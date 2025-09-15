@@ -1,52 +1,38 @@
-# Multi-stage build for Vue.js frontend with Nginx
-# Stage 1: Build the Vue.js application
-FROM node:18-alpine AS builder
+# Multi-stage Dockerfile for Vue 3 application
 
+# Stage 1: Build stage
+FROM node:18-alpine AS build-stage
+
+# 設定工作目錄
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# 複製 package.json
+COPY package.json ./
 
-# Install dependencies
-RUN npm ci
+# 安裝依賴套件 (包含開發依賴，建構時需要)
+RUN npm install
 
-# Copy source code
+# 複製專案檔案
 COPY . .
 
-# Build the application
+# 建構應用程式
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Stage 2: Production stage
+FROM nginx:alpine AS production-stage
 
-# Remove default nginx website
-RUN rm -rf /usr/share/nginx/html/*
+# 複製自定義的 nginx 配置
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# 從建構階段複製編譯後的檔案到 Rainbond 預設靜態檔案目錄, 2025-01-15 起預設目錄改為 /app/www
+COPY --from=build-stage /app/dist /app/www
 
-# Copy custom nginx configuration template
-COPY nginx.conf /etc/nginx/nginx.conf.template
+# 暴露 8080 port
+EXPOSE 5000
 
-# Set default environment variables
-ENV BACKEND_HOST=helloapp-backend
-ENV BACKEND_PORT=8000
+# 設定健康檢查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:5000/ || exit 1
 
-# Expose port 8080
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
-
-# Install gettext for envsubst command
-RUN apk add --no-cache gettext
-
-# Create startup script that processes environment variables
-RUN echo '#!/bin/sh' > /usr/local/bin/start.sh && \
-    echo 'envsubst "\$BACKEND_HOST \$BACKEND_PORT" < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /usr/local/bin/start.sh && \
-    echo 'nginx -g "daemon off;"' >> /usr/local/bin/start.sh && \
-    chmod +x /usr/local/bin/start.sh
-
-# Start nginx with environment variable substitution
-CMD ["/usr/local/bin/start.sh"]
+# 啟動 nginx
+CMD ["nginx", "-g", "daemon off;"]

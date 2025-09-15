@@ -346,3 +346,149 @@ helloapp-backend    0.0.0.0:8000->8000/tcp, :::8000->8000/tcp   Up (healthy)
 
 ### Status
 ✅ **RESOLVED** - Frontend and backend communication is now working correctly through Docker containers with Nginx reverse proxy.
+
+---
+
+## Issue #3: Frontend Static Assets 404 Errors
+
+### Problem Description
+When accessing the frontend at http://localhost:5000/, the main page loads but all static assets (CSS, JavaScript) fail to load with 404 errors, resulting in no UI being displayed.
+
+### Error Messages
+```
+Console Errors:
+index-Di6WNfaS.css:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+vue.esm-browser.js:12725 You are running a development build of Vue.
+Make sure to use the production build (*.prod.js) when deploying for production.
+index-BeibIizu.js:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+vendor-C2UFH459.js:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+index-Di6WNfaS.css:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+### Root Cause Analysis
+
+#### Investigation Steps
+1. **Container Status**: All containers were running and healthy
+2. **File Existence**: Assets existed in the correct location `/app/www/assets/`
+3. **Main Page**: Index.html was loading correctly (200 OK)
+4. **Asset Requests**: All asset requests returned 404 errors
+
+#### Root Cause
+The nginx configuration had a static assets caching rule that was missing the `root` directive:
+
+```nginx
+# Problematic configuration
+location ~* \.(css|js|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    # Missing: root /app/www;
+}
+```
+
+**Issue**: When requests for static assets (like `/assets/index-BeibIizu.js`) matched this location block, nginx couldn't find the files because there was no `root` directive specifying where to look for them.
+
+### Solution Applied
+
+#### Fix: Add Missing Root Directive
+**Location**: `frontend/nginx.conf:95`
+
+**Before (Problematic):**
+```nginx
+# Static assets caching
+location ~* \.(css|js|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+**After (Fixed):**
+```nginx
+# Static assets caching
+location ~* \.(css|js|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$ {
+    root /app/www;
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+#### Deployment Steps
+1. Updated `frontend/nginx.conf` with the missing `root` directive
+2. Rebuilt the frontend container:
+   ```bash
+   docker-compose build frontend && docker-compose up -d frontend
+   ```
+3. Verified asset loading:
+   ```bash
+   curl -I http://localhost:5000/assets/index-BeibIizu.js
+   # Result: HTTP/1.1 200 OK
+   ```
+
+### Technical Details
+
+#### File Structure
+```
+/app/www/
+├── index.html
+└── assets/
+    ├── index-BeibIizu.js
+    ├── index-Di6WNfaS.css
+    └── vendor-C2UFH459.js
+```
+
+#### Nginx Location Matching
+1. **Main page** (`/`): Matched the main location block with `root /app/www`
+2. **Assets** (`/assets/*.js`, `/assets/*.css`): Matched the regex location block but had no `root` directive
+
+#### Container Configuration
+- **Port**: 5000 (updated from 8080)
+- **Static files**: Served from `/app/www/`
+- **Build process**: Multi-stage Docker build with nginx:alpine
+
+### Verification
+After applying the fix, all assets load correctly:
+
+```bash
+# Test results
+curl -I http://localhost:5000/assets/index-BeibIizu.js
+# HTTP/1.1 200 OK
+# Content-Type: application/javascript
+# Content-Length: 42134
+
+curl -I http://localhost:5000/assets/index-Di6WNfaS.css
+# HTTP/1.1 200 OK
+# Content-Type: text/css
+
+curl -I http://localhost:5000/
+# HTTP/1.1 200 OK
+# Content-Type: text/html
+```
+
+### Key Learnings
+
+#### 1. Nginx Location Blocks
+- Each `location` block needs its own `root` directive if it serves files
+- Regex location blocks (`~*`) don't inherit `root` from other blocks
+- Missing `root` directive causes 404 errors even when files exist
+
+#### 2. Static Asset Serving
+- Modern web applications require both HTML and asset files to be served correctly
+- Asset requests follow different nginx location rules than main page requests
+- Cache headers should be applied alongside proper file serving configuration
+
+#### 3. Docker Multi-stage Builds
+- Ensure static files are copied to the correct location in the final image
+- Verify file permissions and directory structure in containers
+- Test asset accessibility separately from main page functionality
+
+### Prevention Strategies
+
+1. **Configuration Testing**: Always test both main page and asset loading
+2. **Nginx Validation**: Use `nginx -T` to verify complete configuration
+3. **Development Workflow**: Test static asset serving early in containerization
+4. **Documentation**: Document required nginx directives for each location block
+
+### Related Files Modified
+- `frontend/nginx.conf:95` - Added missing `root /app/www;` directive to static assets location block
+
+### Status
+✅ **RESOLVED** - Static assets now load correctly and the frontend UI displays properly at http://localhost:5000/.

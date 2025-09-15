@@ -242,24 +242,14 @@ export default {
 
     // Enhanced backend configuration with logging
     const initializeBackendConfig = () => {
-      // Try to determine backend URL from environment or use defaults
-      const backendHost = import.meta.env.VITE_BACKEND_HOST || 'helloapp_backend'
-      const backendPort = import.meta.env.VITE_BACKEND_PORT || '8000'
-      
-      // For development, use localhost if we're in dev mode
-      if (import.meta.env.DEV) {
-        apiBaseUrl.value = `http://localhost:${backendPort}`
-        logInfo('Development mode detected, using localhost for backend connection', {
-          backendUrl: apiBaseUrl.value
-        })
-      } else {
-        apiBaseUrl.value = `http://${backendHost}:${backendPort}`
-        logInfo('Production mode, using container names for backend connection', {
-          backendHost,
-          backendPort,
-          backendUrl: apiBaseUrl.value
-        })
-      }
+      // Use relative URLs to leverage nginx proxy configuration
+      // The nginx server is configured to proxy /api/ requests to the backend
+      apiBaseUrl.value = ''  // Use empty string for relative URLs
+
+      logInfo('Using relative URLs with nginx proxy for backend connection', {
+        backendUrl: apiBaseUrl.value,
+        note: 'nginx will proxy /api/ requests to backend service'
+      })
     }
 
     // Lifecycle hooks
